@@ -9,7 +9,7 @@ public class transaksi {
     static Scanner input = new Scanner(System.in);
 
     public static void doTransaction() {
-        if (!LoggedUser.role.equals("kasir")) {
+        if (!LoggedUser.getRole().equals("kasir")) {
             System.out.println("Akses ditolak. Hanya kasir yang bisa melakukan transaksi.");
             return;
         }
@@ -23,6 +23,7 @@ public class transaksi {
 
         try {
             Connection conn = Database.getConnection();
+            // Retrieve product details
             String sql = "SELECT * FROM produk WHERE id_produk=?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, idProduk);
@@ -30,35 +31,36 @@ public class transaksi {
 
             if (rs.next()) {
                 int stok = rs.getInt("stok");
-                if (stok >= jumlah) {
-                    double harga = rs.getDouble("harga");
-                    double total = harga * jumlah;
+                double harga = rs.getDouble("harga");
 
-                    // Update stok produk
-                    String updateStok = "UPDATE produk SET stok=? WHERE id_produk=?";
-                    PreparedStatement updateStmt = conn.prepareStatement(updateStok);
-                    updateStmt.setInt(1, stok - jumlah);
-                    updateStmt.setInt(2, idProduk);
-                    updateStmt.executeUpdate();
-
-                    // Insert transaksi
-                    String insertTransaksi = "INSERT INTO transaksi (id_produk, jumlah, total) VALUES (?, ?, ?)";
-                    PreparedStatement insertStmt = conn.prepareStatement(insertTransaksi);
-                    insertStmt.setInt(1, idProduk);
-                    insertStmt.setInt(2, jumlah);
-                    insertStmt.setDouble(3, total);
-                    insertStmt.executeUpdate();
-
-                    System.out.println("Transaksi berhasil! Total: " + total);
+                if (stok < jumlah) {
+                    System.out.println("Stok tidak cukup!");
                 } else {
-                    System.out.println("Stok tidak cukup.");
+                    double total = harga * jumlah;
+                    System.out.println("Total: " + total);
+
+                    // Update product stock
+                    String updateSql = "UPDATE produk SET stok = stok - ? WHERE id_produk=?";
+                    PreparedStatement updatePs = conn.prepareStatement(updateSql);
+                    updatePs.setInt(1, jumlah);
+                    updatePs.setInt(2, idProduk);
+                    updatePs.executeUpdate();
+
+                    // Log the transaction
+                    String transaksiSql = "INSERT INTO transaksi (id_produk, jumlah, total) VALUES (?, ?, ?)";
+                    PreparedStatement transaksiPs = conn.prepareStatement(transaksiSql);
+                    transaksiPs.setInt(1, idProduk);
+                    transaksiPs.setInt(2, jumlah);
+                    transaksiPs.setDouble(3, total);
+                    transaksiPs.executeUpdate();
+
+                    System.out.println("Transaksi berhasil!");
                 }
             } else {
                 System.out.println("Produk tidak ditemukan.");
             }
-        } catch (Exception e) {
-            System.out.println("Gagal transaksi: " + e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Terjadi kesalahan saat transaksi: " + e.getMessage());
         }
     }
 }
-

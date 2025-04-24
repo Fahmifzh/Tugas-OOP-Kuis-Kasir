@@ -1,14 +1,13 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.kasirami;
+
 import java.sql.*;
 import java.util.Scanner;
+
 public class User {
-   static Scanner input = new Scanner(System.in);
+    static Scanner input = new Scanner(System.in);
+
     public static void addUser() {
-        if (!LoggedUser.role.equals("admin")) {
+        if (!LoggedUser.getRole().equals("admin")) {
             System.out.println("Akses ditolak. Hanya admin yang bisa menambah user.");
             return;
         }
@@ -36,7 +35,7 @@ public class User {
     }
 
     public static void showUsers() {
-        if (!LoggedUser.role.equals("admin")) {
+        if (!LoggedUser.getRole().equals("admin")) {
             System.out.println("Akses ditolak. Hanya admin yang bisa melihat user.");
             return;
         }
@@ -55,7 +54,7 @@ public class User {
     }
 
     public static void deleteUser() {
-        if (!LoggedUser.role.equals("admin")) {
+        if (!LoggedUser.getRole().equals("admin")) {
             System.out.println("Akses ditolak. Hanya admin yang bisa menghapus user.");
             return;
         }
@@ -76,14 +75,13 @@ public class User {
         }
     }
 
-    // Fungsi logout
+    // Polymorphism: logout dengan aksi berbeda setelah login
     public static void logout() {
         System.out.println("Logout berhasil.");
         // Menampilkan pilihan setelah logout
         showLogoutOptions();
     }
 
-    // Fungsi untuk menampilkan pilihan setelah logout
     private static void showLogoutOptions() {
         Scanner input = new Scanner(System.in);
         System.out.println("\nPilihan setelah Logout:");
@@ -102,6 +100,38 @@ public class User {
         } else {
             System.out.println("Opsi tidak valid. Silakan coba lagi.");
             showLogoutOptions(); // Tampilkan pilihan lagi jika input tidak valid
+        }
+    }
+
+    // Otentikasi: Fungsi login
+    public static boolean login() {
+        System.out.println("==== LOGIN ====");
+        System.out.print("Username: ");
+        String username = input.nextLine();
+        System.out.print("Password: ");
+        String password = input.nextLine();
+
+        try {
+            Connection conn = Database.getConnection();
+            String sql = "SELECT * FROM user WHERE username=? AND password=?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+            ps.setString(2, password);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                LoggedUser.setId(rs.getInt("id_user"));
+                LoggedUser.setUsername(rs.getString("username"));
+                LoggedUser.setRole(rs.getString("role"));
+                System.out.println("Login berhasil. Role: " + LoggedUser.getRole());
+                return true;
+            } else {
+                System.out.println("Username / Password salah.");
+                return false;
+            }
+        } catch (Exception e) {
+            System.out.println("Login error: " + e.getMessage());
+            return false;
         }
     }
 }

@@ -21,10 +21,10 @@ public class login {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                LoggedUser.id = rs.getInt("id_user");
-                LoggedUser.username = rs.getString("username");
-                LoggedUser.role = rs.getString("role");
-                System.out.println("Login berhasil. Role: " + LoggedUser.role);
+                LoggedUser.setId(rs.getInt("id_user"));
+                LoggedUser.setUsername(rs.getString("username"));
+                LoggedUser.setRole(rs.getString("role"));
+                 System.out.println("Login berhasil. Role: " + LoggedUser.getRole());
                 return true;
             } else {
                 System.out.println("Username / Password salah.");

@@ -1,13 +1,13 @@
-
 package com.mycompany.kasirami;
+
 import java.sql.*;
 import java.util.Scanner;
+
 public class produk {
     static Scanner input = new Scanner(System.in);
 
-    // Method untuk menambah produk
     public static void addProduct() {
-        if (!LoggedUser.role.equals("admin")) {
+        if (!LoggedUser.getRole().equals("admin")) {
             System.out.println("Akses ditolak. Hanya admin yang bisa menambah produk.");
             return;
         }
@@ -16,58 +16,55 @@ public class produk {
         System.out.print("Nama Produk: ");
         String nama = input.nextLine();
 
-        // Menangani input harga dengan desimal
-        double harga = 0;
-        while (true) {
-            try {
-                System.out.print("Harga: ");
-                harga = Double.parseDouble(input.nextLine()); // Parsing harga ke tipe desimal (double)
-                if (harga < 0) {
-                    System.out.println("Harga tidak bisa negatif. Coba lagi.");
-                } else {
-                    break; // Keluar dari loop jika input valid
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Harga tidak valid, masukkan angka desimal yang benar!");
-            }
-        }
+        double harga = ambilHarga();
+        int stok = ambilStok();
 
-        // Menangani input stok dengan integer
-        int stok = 0;
-        while (true) {
-            try {
-                System.out.print("Stok: ");
-                stok = Integer.parseInt(input.nextLine()); // Parsing stok ke tipe integer
-                if (stok < 0) {
-                    System.out.println("Stok tidak bisa negatif. Coba lagi.");
-                } else {
-                    break; // Keluar dari loop jika input valid
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Stok tidak valid, masukkan angka integer yang benar!");
-            }
-        }
-
-        // Menambahkan produk ke dalam database
         try {
             Connection conn = Database.getConnection();
             String sql = "INSERT INTO produk (nama_produk, harga, stok) VALUES (?, ?, ?)";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, nama);
-            ps.setDouble(2, harga); // Menyimpan harga sebagai tipe desimal
-            ps.setInt(3, stok); // Menyimpan stok sebagai integer
+            ps.setDouble(2, harga);
+            ps.setInt(3, stok);
             ps.executeUpdate();
             System.out.println("Produk berhasil ditambahkan.");
-
-           
         } catch (SQLException e) {
             System.out.println("Terjadi kesalahan saat menambah produk: " + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Kesalahan tidak terduga: " + e.getMessage());
         }
     }
 
-    // Method untuk menampilkan produk
+    private static double ambilHarga() {
+        while (true) {
+            try {
+                System.out.print("Harga: ");
+                double harga = Double.parseDouble(input.nextLine());
+                if (harga < 0) {
+                    System.out.println("Harga tidak boleh negatif!");
+                } else {
+                    return harga;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Input tidak valid, masukkan angka!");
+            }
+        }
+    }
+
+    private static int ambilStok() {
+        while (true) {
+            try {
+                System.out.print("Stok: ");
+                int stok = Integer.parseInt(input.nextLine());
+                if (stok < 0) {
+                    System.out.println("Stok tidak boleh negatif!");
+                } else {
+                    return stok;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Input tidak valid, masukkan angka!");
+            }
+        }
+    }
+
     public static void showProducts() {
         System.out.println("--- Daftar Produk ---");
         try {
@@ -83,9 +80,8 @@ public class produk {
         }
     }
 
-    // Method untuk menghapus produk
     public static void deleteProduct() {
-        if (!LoggedUser.role.equals("admin")) {
+        if (!LoggedUser.getRole().equals("admin")) {
             System.out.println("Akses ditolak. Hanya admin yang bisa menghapus produk.");
             return;
         }
